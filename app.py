@@ -1,14 +1,18 @@
 from flask import Flask, render_template, request, make_response, redirect
 from spotify_backend import generate_auth_url, create_spotify, get_name
 from uuid import uuid4
-import spotipy
+from pymongo import MongoClient
+from vk_backend import parse_songs, get_id
 
 app = Flask(__name__)
+client = MongoClient()
 
 # Сохраняем объекты Spotify
 spotify_storage = {}
 # Сохраняем все auth managers для того, чтобы создавать объект Spotify
 auth_managers = {}
+# База данных с query и errors
+db = client.transferify
 
 
 def generate_session_id():
@@ -43,8 +47,25 @@ def transfer_page():
     if request.method == 'GET':  # Если GET... (перебрасываем на страницу ввода short name)
         return render_template('transfer.html', name=user_name)
     # Если POST... (обрабатываем треки)
-    short_name = request.form['short_name']
-    pass  # TODO: обработка треков
+    short_name = request.form['short_name']  # Получаем short name, которое ввел пользователь
+    vk_id = get_id(short_name)  # Получаем vk_id для парсинга песен
+
+    user_data = {
+        'user_id': user_id,
+        'short_name': short_name,
+        'vk_id': vk_id,
+        'query': [],  # Выгружаемые песни
+        'errors': []  # Ошибки в экспорте (выводятся на экране после экспорта)
+    }
+
+    user_data['query'] = parse_songs(user_data['vk_id'])  # Парсим песни, todo: multiprocessing
+    db.sessions.insert_one(user_data)
+    return redirect('/transfer/confirm')
+
+
+@app.route('/transfer/confirm')
+def transfer_confirmation():
+    return ''  # todo: transfer confirmation
 
 
 @app.route('/oauth')
