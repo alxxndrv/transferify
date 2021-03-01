@@ -1,9 +1,11 @@
-from flask import Flask, render_template, Request
+from flask import Flask, render_template, request
 from spotify_backend import generate_auth_url
 
 app = Flask(__name__)
 
+# Сохраняем объекты Spotify
 spotify_storage = {}
+# Сохраняем все auth managers для того, чтобы создавать объект Spotify
 auth_managers = {}
 
 
