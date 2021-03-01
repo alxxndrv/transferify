@@ -32,7 +32,7 @@ def index():
     return response
 
 
-@app.route('/transfer')
+@app.route('/transfer', methods=['GET', 'POST'])  # Через GET — отображаем страницу
 def transfer_page():
     user_id = request.cookies.get('userID')
     spotify = spotify_storage.get(user_id)
@@ -40,7 +40,11 @@ def transfer_page():
         return redirect('/')  # Возвращаем юзера на главную страницу, если он перешел на трансфер просто так (без
         # авторизации)
     user_name = get_name(spotify)
-    return render_template('transfer.html', name=user_name)
+    if request.method == 'GET':  # Если GET... (перебрасываем на страницу ввода short name)
+        return render_template('transfer.html', name=user_name)
+    # Если POST... (обрабатываем треки)
+    short_name = request.form['short_name']
+    pass  # TODO: обработка треков
 
 
 @app.route('/oauth')
