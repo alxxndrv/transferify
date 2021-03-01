@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, make_response, redirect
-from spotify_backend import generate_auth_url, create_spotify
+from spotify_backend import generate_auth_url, create_spotify, get_name
 from uuid import uuid4
 import spotipy
 
@@ -34,7 +34,13 @@ def index():
 
 @app.route('/transfer')
 def transfer_page():
-    return 'transfer_page'
+    user_id = request.cookies.get('userID')
+    spotify = spotify_storage.get(user_id)
+    if not spotify:
+        return redirect('/')  # Возвращаем юзера на главную страницу, если он перешел на трансфер просто так (без
+        # авторизации)
+    user_name = get_name(spotify)
+    return render_template('transfer.html', name=user_name)
 
 
 @app.route('/oauth')
@@ -45,8 +51,7 @@ def oauth():
         response = make_response(redirect('/'))
         response.set_cookie('userID', '', expires=0)  # Удаляем user_id из кук и перебрасыаем на стартовую страницу
         return response
-    auth_manager.parse_auth_response_url(request.url)  # Парсим урл оауфа
-    spotify_storage[user_id] = create_spotify(auth_manager)
+    spotify_storage[user_id] = create_spotify(auth_manager, request.url)
     return redirect('transfer')
 
 
