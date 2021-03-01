@@ -39,12 +39,11 @@ def transfer_page():
 
 @app.route('/oauth')
 def oauth():
-    # TODO: проверка, есть ли user_id в auth и в spotify
     user_id = request.cookies.get('userID')
     auth_manager = auth_managers.get(user_id)  # Достаем auth manager из словаря
-    if not auth_manager:
+    if not auth_manager:  # Если user_id нет в auth_managers, то
         response = make_response(redirect('/'))
-        response.set_cookie('userID', '', expires=0)
+        response.set_cookie('userID', '', expires=0)  # Удаляем user_id из кук и перебрасыаем на стартовую страницу
         return response
     auth_manager.parse_auth_response_url(request.url)  # Парсим урл оауфа
     spotify_storage[user_id] = create_spotify(auth_manager)
